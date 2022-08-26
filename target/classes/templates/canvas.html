@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="//toolness.github.io/p5.js-widget/p5-widget.js"></script>
+    <script type="text/javascript" src="js/paper-core.js"></script>
+
+    <style>
+        .sidenav {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+
+        .sidenav a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+
+        .sidenav .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        #main {
+            transition: margin-left .5s;
+            padding: 16px;
+        }
+
+        @media screen and (max-height: 450px) {
+            .sidenav {padding-top: 15px;}
+            .sidenav a {font-size: 18px;}
+        }
+    </style>
+</head>
+<body>
+
+<div id="mySidenav" class="sidenav">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <a href="/binarySearchTree">Binary Search Tree</a>
+    <a href="/AVLTree">AVL Tree</a>
+</div>
+
+<div id="main">
+    <h2>Sidenav Push Example</h2>
+    <p>Click on the element below to open the side navigation menu, and push this content to the right.</p>
+    <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776; open</span>
+</div>
+
+<form th:action="@{${#httpServletRequest.getContextPath()}}">
+    <input type="text" th:name="insertValue" id="insertValue">
+    <label for="insertValue">
+        Insert
+    </label>
+
+    <input type="text" th:name="removeValue" id="removeValue">
+    <label for="removeValue">
+        Remove
+    </label>
+
+    <input type="text" th:name="insertMultiple" id="insertMultiple" placeholder="eg/1, 2, 4, 5">
+    <label for="insertMultiple">
+        Insert multiple
+    </label>
+    <input type="range" value="24" min="1" max="10000" oninput="this.nextElementSibling.value = this.value">
+    <input type="text" th:name="randomCount">24</input>
+    <label>
+        Insert random values
+    </label>
+    <button type="submit">
+        Do It
+    </button>
+</form>
+<canvas id="myCanvas" th:width="${board.width}" th:height="${board.height}" style="border:1px solid #d3d3d3;">
+    Your browser does not support the HTML canvas tag.</canvas>
+
+//side nav bar script
+<script>
+    function openNav() {
+        document.getElementById("mySidenav").style.width = "250px";
+        document.getElementById("main").style.marginLeft = "250px";
+    }
+
+    function closeNav() {
+        document.getElementById("mySidenav").style.width = "0";
+        document.getElementById("main").style.marginLeft= "0";
+    }
+</script>
+
+//canvas script
+<script th:inline="javascript">
+    function byId(e){return document.getElementById(e)}
+    window.addEventListener('load', onDocLoaded, false);
+    /*<![CDATA[*/
+            let xCoord = /*[[${xCoord}]]*/ 0;
+            let yCoord = /*[[${yCoord}]]*/ 0;
+            let size = /*[[${size}]]*/ 0;
+            // circle(xCoord,yCoord,size);
+            let nodes = /*[[${treeAsList}]]*/ [];
+        /*]]>*/
+
+    var shapeList = [];
+
+    // for (let i = 0; i < nodes.length; i++) {
+    //     // console.log(nodes[i].right.position.x);
+    //
+    //     circle(nodes[i].position.x, nodes[i].position.y, size, nodes[i].key);
+    //     if (nodes[i].left != null){
+    //         arrow(c, nodes[i].position.x+size/2, nodes[i].position.y+size/2, nodes[i].left.position.x+size/2,nodes[i].left.position.y+size/2)
+    //     }
+    //     if (nodes[i].right != null){
+    //         arrow(c, nodes[i].position.x, nodes[i].position.y, nodes[i].right.position.x,nodes[i].right.position.y)
+    //     }
+    // }
+    function onDocLoaded()
+    {
+        var i, n=10;
+        var canvas = byId('myCanvas');
+
+        for (let i = 0; i < nodes.length; i++) {
+
+            shapeList[i] = new circle_t(nodes[i].position.x, nodes[i].position.y, size, nodes[i].key);
+            shapeList[i].draw(canvas);
+            if(nodes[i].right != null){
+                draw_line2(nodes[i].position.x, nodes[i].position.y, size, nodes[i].right.position.x,nodes[i].right.position.y, size);
+            }
+            if (nodes[i].left != null){
+                draw_line2(nodes[i].position.x, nodes[i].position.y, size, nodes[i].left.position.x,nodes[i].left.position.y, size);
+            }
+
+        }
+
+        // for (i=0; i<nodes.length-1; i++)
+    }
+
+    var shape_t = function(x,y)
+    {
+        this.origX = (x==undefined ? 0 : x);
+        this.origY = (y==undefined ? 0 : y);
+    }
+    shape_t.prototype =
+        {
+            origX:0, origY:0, typeString:'shape',
+            setPos: function(x,y){this.x=x;this.y=y;},
+            setType: function(typeString){this.typeString = typeString;},
+            toString: function(){return this.typeString + " - " + this.origX + "," + this.origY;},
+            draw: function(canElem){},
+        };
+
+    function circle_t(x,y,radius, value)
+    {
+        this.origX = (x==undefined ? 0 : x);
+        this.origY = (y==undefined ? 0 : y);
+        this.radius = (radius==undefined ? 10 : radius);
+        this.value = value;
+        this.setType("circle");
+    }
+    circle_t.prototype = new shape_t();
+    circle_t.prototype.constructor = circle_t;
+    circle_t.prototype.draw = function(canElem, color)
+    {
+        var ctx = canElem.getContext('2d');
+        var col = 'black';
+        if (color != undefined)
+            col = color;
+        drawCircle(this.origX, this.origY, this.radius, ctx, col, this.value);
+    }
+
+    circle_t.prototype.setRadius = function(radius)
+    {
+        if (radius != undefined)
+            this.radius = radius;
+    }
+
+    function drawCircle(x, y, radius, ctx, col, value)
+    {
+        ctx.save();
+        if (col == undefined)
+            col = 'black';
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x,y,radius,(Math.PI/180)*0, (Math.PI/180)*360, false);
+        ctx.stroke();
+        ctx.closePath();
+        ctx.restore();
+        text(Math.round(radius),x,y,value, radius)
+    }
+
+    // define a vec2 class to make vector maths easier (simpler to read)
+    function vec2(x,y)
+    {
+        this.length = function()
+        {
+            return Math.sqrt((this.x * this.x) + (this.y*this.y));
+        }
+        this.normalize = function()
+        {
+            var scale = this.length();
+            this.x /= scale;
+            this.y /= scale;
+        }
+        this.x = x;
+        this.y = y;
+    }
+    function text(fontSize,x,y,value, radius){
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+        ctx.font = fontSize + "px" +  " Arial";
+        // ctx.fontsize = fontSize;
+        // ctx.font = font || "Arial"
+        ctx.fillText(String(value),x-(radius/2),y+(radius/2))
+    }
+    function draw_line2(center1_x, center1_y, radius1, center2_x, center2_y, radius2)
+    {
+        var betweenVec = new vec2(center2_x - center1_x, center2_y - center1_y);
+        betweenVec.normalize();
+
+        var p1x = center1_x + (radius1 * betweenVec.x);
+        var p1y = center1_y + (radius1 * betweenVec.y);
+
+        var p2x = center2_x - (radius2 * betweenVec.x);
+        var p2y = center2_y - (radius2 * betweenVec.y);
+
+        var canvas = document.getElementById('myCanvas');
+        var context = canvas.getContext('2d');
+        context.beginPath();
+        context.moveTo(p1x,p1y);
+        context.lineTo(p2x,p2y);
+        context.stroke();
+    }
+
+</script>
+
+<!--<script th:inline="javascript">-->
+<!--    /*<![CDATA[*/-->
+<!--        let xCoord = /*[[${xCoord}]]*/ 0;-->
+<!--        let yCoord = /*[[${yCoord}]]*/ 0;-->
+<!--        let size = /*[[${size}]]*/ 0;-->
+<!--        circle(xCoord,yCoord,size);-->
+<!--        let nodes = /*[[${treeAsList}]]*/ [];-->
+<!--    /*]]>*/-->
+
+<!--    var c = document.getElementById("myCanvas").getContext("2d");-->
+<!--    for (let i = 0; i < nodes.length; i++) {-->
+<!--        // console.log(nodes[i].right.position.x);-->
+
+<!--        circle(nodes[i].position.x, nodes[i].position.y, size, nodes[i].key);-->
+<!--        if (nodes[i].left != null){-->
+<!--            arrow(c, nodes[i].position.x+size/2, nodes[i].position.y+size/2, nodes[i].left.position.x+size/2,nodes[i].left.position.y+size/2)-->
+<!--        }-->
+<!--        if (nodes[i].right != null){-->
+<!--            arrow(c, nodes[i].position.x, nodes[i].position.y, nodes[i].right.position.x,nodes[i].right.position.y)-->
+<!--        }-->
+<!--    }-->
+
+
+<!--    // arrow(c,300,300,600,600)-->
+
+<!--     console.log(nodes);-->
+
+
+<!--    function arrow(context, fromx, fromy, tox, toy) {-->
+<!--        var headlen = 10; // length of head in pixels-->
+<!--        var dx = tox - fromx;-->
+<!--        var dy = toy - fromy;-->
+<!--        var angle = Math.atan2(dy, dx);-->
+<!--        context.beginPath();-->
+<!--        context.moveTo(fromx, fromy);-->
+<!--        context.lineTo(tox, toy);-->
+<!--        context.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));-->
+<!--        context.moveTo(tox, toy);-->
+<!--        context.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));-->
+<!--        context.closePath();-->
+<!--        context.stroke();-->
+<!--    }-->
+
+<!--    function circle(xCoord, yCoord, size, number) {-->
+<!--        var c = document.getElementById("myCanvas");-->
+<!--        var ctx = c.getContext("2d");-->
+<!--        ctx.beginPath();-->
+<!--        ctx.arc(size + xCoord,size + yCoord,size,(Math.PI/180)*0, (Math.PI/180)*360,false);-->
+<!--        ctx.stroke();-->
+<!--        let fontXCoord = xCoord+size/2;-->
+<!--        let fontYCoord = yCoord+size;-->
+<!--        text(30,"Arial",fontXCoord,fontYCoord, String(number));-->
+<!--    }-->
+<!--</script>-->
+</body>
+</html>
+
